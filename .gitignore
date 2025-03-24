@@ -1,68 +1,44 @@
-# Byte-compiled / optimized / DLL files
+# Python cache and logs
 __pycache__/
 *.py[cod]
-*$py.class
+*.log
 
-# C extensions
-*.so
-
-# Virtual environments
+# Environment
 .env
-.venv
+.venv/
 env/
 venv/
-ENV/
-env.bak/
-venv.bak/
 
-# Environment variables
-*.env
+# Docker artifacts
+*.pid
+docker-compose.override.yml
 
-# Distribution / packaging
+# OS generated files
+.DS_Store
+
+# Editor folders
+.idea/
+.vscode/
+
+# Build artifacts
 build/
 dist/
 *.egg-info/
-.eggs/
-*.egg
-MANIFEST
 
-# Logs and local debug files
-*.log
-*.pid
-*.sqlite3
-*.db
-*.pkl
-*.coverage
-.coverage.*
-.cache/
-
-# Testing
+# Unit test cache
 .pytest_cache/
 .tox/
 .nox/
-hypothesis/
 
-# IDE/editor settings
-.idea/
-.vscode/
+# Coverage
+.coverage*
+htmlcov/
 
 # Jupyter
 .ipynb_checkpoints
 
-# Docker
-**/__pycache__/
-**/.pytest_cache/
-docker-compose.override.yml
-docker-compose.bak.yml
-
-# Others
-.DS_Store
-*.iml
-*.bak
-*.swp
-*.swo
-*.orig
-*.tmp
-
-# Ruff
-.ruff_cache/
+# Grafana & Prometheus (custom dashboards, data)
+grafana/data/
+grafana/plugins/
+grafana/provisioning/dashboards/*.bak
+prometheus/data/
