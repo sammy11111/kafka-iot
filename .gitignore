@@ -1,0 +1,40 @@
+# --- Additions for the current stack ---
+
+# Docker-specific
+*.pid
+docker-compose.override.yml
+
+# Local volumes and bind mounts
+volumes/
+**/tmp/
+
+# Kafka logs
+kafka-logs/
+zookeeper-logs/
+
+# Prometheus and Grafana provisioning 
+prometheus/data/
+grafana/data/
+grafana/provisioning/dashboards/*.json
+
+# FastAPI hot reload or cache
+*.db
+*.sqlite3
+
+# Environment secrets
+.env
+.env.*
+
+# Log files
+*.log
+
+# Coverage reports
+coverage/
+
+# Python bytecode
+*.py[cod]
+__pycache__/
+
+# VSCode/PyCharm configs
+.vscode/
+.idea/

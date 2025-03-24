@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      kafka_network:
+        aliases:
+          - zookeeper
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    environment:
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID:-1}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT:-zookeeper:2181}
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR:-1}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      kafka_network:
+        aliases:
+          - kafka
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  fastapi:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile.dev
+    container_name: fastapi
+    restart: always
+    ports:
+      - "${FASTAPI_PORT:-8000}:8000"
+    volumes:
+      - ./fastapi:/app
+    depends_on:
+      - kafka
+      - mongodb
+    environment:
+      KAFKA_BROKER: ${KAFKA_BROKER:-kafka:9092}
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-sensor-data-dev}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017}
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      kafka_network:
+        aliases:
+          - fastapi
+
+  mongodb:
+    image: mongo:6.0.6
+    container_name: mongodb
+    restart: always
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      kafka_network:
+        aliases:
+          - mongodb
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: grafana
+    restart: always
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - mongodb
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=${GF_USERS_ALLOW_SIGN_UP:-false}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      kafka_network:
+        aliases:
+          - grafana
+
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: prometheus
+    restart: always
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      kafka_network:
+        aliases:
+          - prometheus
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.1
+    container_name: kafka-ui
+    restart: always
+    ports:
+      - "${KAFKA_UI_PORT:-8080}:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: ${KAFKA_CLUSTERS_0_NAME:-local}
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS:-kafka:9092}
+      KAFKA_CLUSTERS_0_ZOOKEEPER: ${KAFKA_CLUSTERS_0_ZOOKEEPER:-zookeeper:2181}
+    depends_on:
+      - kafka
+    networks:
+      kafka_network:
+        aliases:
+          - kafka-ui
+
+volumes:
+  kafka_data:
+  mongo_data:
+  grafana_data:
+
+networks:
+  kafka_network:
+    driver: bridge

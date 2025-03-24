@@ -1,0 +1,13 @@
+name: kafka-iot-env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - fastapi
+  - uvicorn
+  - pymongo
+  - kafka-python
+  - pip
+  - pip:
+      - python-dotenv
