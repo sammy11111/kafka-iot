@@ -1,5 +1,3 @@
-fastapi
-uvicorn
 pymongo
 kafka-python
 python-dotenv
