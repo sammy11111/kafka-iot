@@ -1,40 +1,68 @@
-# --- Additions for the current stack ---
-
-# Docker-specific
-*.pid
-docker-compose.override.yml
-
-# Local volumes and bind mounts
-volumes/
-**/tmp/
-
-# Kafka logs
-kafka-logs/
-zookeeper-logs/
-
-# Prometheus and Grafana provisioning 
-prometheus/data/
-grafana/data/
-grafana/provisioning/dashboards/*.json
-
-# FastAPI hot reload or cache
-*.db
-*.sqlite3
-
-# Environment secrets
-.env
-.env.*
-
-# Log files
-*.log
-
-# Coverage reports
-coverage/
-
-# Python bytecode
-*.py[cod]
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
 
-# VSCode/PyCharm configs
-.vscode/
+# C extensions
+*.so
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
+*.env
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+MANIFEST
+
+# Logs and local debug files
+*.log
+*.pid
+*.sqlite3
+*.db
+*.pkl
+*.coverage
+.coverage.*
+.cache/
+
+# Testing
+.pytest_cache/
+.tox/
+.nox/
+hypothesis/
+
+# IDE/editor settings
 .idea/
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Docker
+**/__pycache__/
+**/.pytest_cache/
+docker-compose.override.yml
+docker-compose.bak.yml
+
+# Others
+.DS_Store
+*.iml
+*.bak
+*.swp
+*.swo
+*.orig
+*.tmp
+
+# Ruff
+.ruff_cache/

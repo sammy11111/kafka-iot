@@ -1,0 +1,7 @@
+{
+  "dashboard": {
+    "title": "System Metrics",
+    "panels": []
+  },
+  "overwrite": true
+}
