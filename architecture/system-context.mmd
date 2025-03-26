@@ -1,8 +1,8 @@
 flowchart TD
     OS(OpenSneseMap)
-    DC(Data Collector)
+    DC(Data Ingestor)
     KK@{shape: das, label: "Kafka"}
-    EL(Event Listener)
+    EL(Data Processor)
     DB[(MongoDB)]
     GN(Grafana)
 
