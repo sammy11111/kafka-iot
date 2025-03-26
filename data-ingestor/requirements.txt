@@ -1,5 +1,5 @@
-fastapi
-uvicorn
-pymongo
+requests
 kafka-python
 python-dotenv
+pandas
+numpy

@@ -1,0 +1,13 @@
+flowchart TD
+    OS(OpenSneseMap)
+    DC(Data Ingestor)
+    KK@{shape: das, label: "Kafka"}
+    EL(Data Processor)
+    DB[(MongoDB)]
+    GN(Grafana)
+
+    DC-->|Fetch via API|OS
+    DC-->|Publish Kafka Topic|KK
+    EL-->|Consume Kafka Topic|KK
+    EL-->|Store Sensor Data|DB
+    GN-->|Fetch Sensor Data|DB

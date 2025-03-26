@@ -5,6 +5,8 @@ services:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
     restart: always
+    ports:
+      - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -43,28 +45,35 @@ services:
       timeout: 10s
       retries: 5
 
-  fastapi:
+  data-ingestor:
     build:
-      context: ./fastapi
+      context: ./data-ingestor
       dockerfile: Dockerfile.dev
-    container_name: fastapi
+    container_name: data-ingestor
     restart: always
-    ports:
-      - "${FASTAPI_PORT:-8000}:8000"
     volumes:
-      - ./fastapi:/app
+      - ./data-ingestor:/app
     depends_on:
       - kafka
-      - mongodb
-    environment:
-      KAFKA_BROKER: ${KAFKA_BROKER:-kafka:9092}
-      KAFKA_TOPIC: ${KAFKA_TOPIC:-sensor-data-dev}
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017}
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       kafka_network:
         aliases:
-          - fastapi
+          - data-ingestor
+
+  data-processor:
+    build:
+      context: ./data-processor
+      dockerfile: Dockerfile.dev
+    container_name: data-processor
+    restart: always
+    volumes:
+      - ./data-processor:/app
+    depends_on:
+      - kafka
+    networks:
+      kafka_network:
+        aliases:
+          - data-processor
 
   mongodb:
     image: mongo:6.0.6
