@@ -1,8 +1,8 @@
 sequenceDiagram
     participant OS as OpenSneseMap
-    participant DC as Data Collector
+    participant DC as Data Ingestor
     participant KK as Kafka
-    participant EL as Event Listener
+    participant EL as Data Processor
     participant DB as MongoDB
     participant GN as Grafana
 
@@ -14,7 +14,7 @@ sequenceDiagram
     DC->>DC: Validata Data
     DC->>KK: Publish IoT Data as Kafka Topic
     deactivate DC
-    KK->>EL: Emit IoT Data Event
+    EL->>KK: Poll IoT Data Event
     activate EL
     EL->>EL: Trasform Data
     EL->>DB: Store Structured Data

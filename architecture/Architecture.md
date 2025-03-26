@@ -9,19 +9,19 @@ This document outlines the architecture of the Kafka IoT Project, focusing on ho
 
 | Component         | Role                                                    |
 |------------------|----------------------------------------------------------|
-| **Data Collector**| Fetches real-time sensor data from OpenSense and  Publishes to Kafka. Acts as the interface between external APIs and internal processing. |
+| **Data Ingestor**| Fetches real-time sensor data from OpenSense and  Publishes to Kafka (Kafka Producer). Acts as the interface between external APIs and internal processing. |
 | **Kafka**         | Serves as the decoupling middleware for data ingestion and distribution. Enables high-throughput, fault-tolerant message queues. |
-| **Event Listener**| Subscribes to Kafka topics, processes/validates messages, and writes structured data to MongoDB. |
+| **Data Processor**| Subscribes to Kafka topics, processes the messages, and writes structured data to MongoDB. |
 | **MongoDB**       | NoSQL document-based database that stores time-series and structured sensor data. Designed for scalability and flexible schema. |
 | **Grafana**       | Connects to MongoDB and renders live dashboards with filters, charts, and alerts for real-time analytics. |
 
 ## Summary of Integration
 | Consumer | Provider | Protocol | Description |
 |-|-|-|-|
-|Data Collector|OpenSense|HTTPS|Fetches IoT data from OpenSense's REST API|
-|Data Collector|Kafka|Kafka Message|Publishes the IoT data from OpenSense as Kafka Topic|
-|Event Listener|Kafka|Kafka Message|Consumes the Kafka Topic containing IoT data|
-|Event Listener|MongoDB|MongoDB Wire|Writes IoT data to database|
+|Data Ingestor|OpenSense|HTTPS|Fetches IoT data from OpenSense's REST API|
+|Data Ingestor|Kafka|Kafka Message|Publishes the IoT data from OpenSense as Kafka Topic|
+|Data Processor|Kafka|Kafka Message|Consumes the Kafka Topic containing IoT data|
+|Data Processor|MongoDB|MongoDB Wire|Writes IoT data to database|
 |Grafana|MongoDB|MongoDB Wire|Reads IoT data from database|
 
 ## System Behaviour
