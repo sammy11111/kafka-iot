@@ -45,35 +45,35 @@ services:
       timeout: 10s
       retries: 5
 
-  data-collector:
+  data-ingestor:
     build:
-      context: ./data-collector
+      context: ./data-ingestor
       dockerfile: Dockerfile.dev
-    container_name: data-collector
+    container_name: data-ingestor
     restart: always
     volumes:
-      - ./data-collector:/app
+      - ./data-ingestor:/app
     depends_on:
       - kafka
     networks:
       kafka_network:
         aliases:
-          - data-collector
+          - data-ingestor
 
-  event-listener:
+  data-processor:
     build:
-      context: ./event-listener
+      context: ./data-processor
       dockerfile: Dockerfile.dev
-    container_name: event-listener
+    container_name: data-processor
     restart: always
     volumes:
-      - ./event-listener:/app
+      - ./data-processor:/app
     depends_on:
       - kafka
     networks:
       kafka_network:
         aliases:
-          - event-listener
+          - data-processor
 
   mongodb:
     image: mongo:6.0.6
