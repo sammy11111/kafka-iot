@@ -1,5 +1,3 @@
 requests
 kafka-python
 python-dotenv
-pandas
-numpy
