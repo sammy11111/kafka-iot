@@ -4,6 +4,9 @@ import json
 import os
 from kafka import KafkaProducer
 from multiprocessing import Pool
+from pydantic import BaseModel, Field, ValidationError
+from datetime import datetime
+from typing import List, Optional
 
 # Number of workers in the pool
 # This is the number of concurrent requests that can be made to the API
@@ -11,6 +14,31 @@ POOL_SIZE = 8
 TIME_WINDOW = 60  # seconds
 SENSOR_DATA_TOPIC = 'iot.raw-data.opensensemap'
 KAFKA_BOOTSTRAP_SERVER = os.environ['KAFKA_BOOTSTRAP_SERVER'] or 'localhost:29092'
+
+# Models for API calls to fetch boxes
+class Location(BaseModel):
+    coordinates: list[float]
+    type: str
+    timestamp: datetime
+
+class Box(BaseModel):
+    _id:str
+    name: str
+    exposure: Optional[str]
+    lastMeasurementAt: datetime
+    currentLocation: Location
+
+# Models for API calls to fetch sensors
+class Measurement(BaseModel):
+    createdAt: datetime
+    value: float
+
+class Sensor(BaseModel):
+    _id: str
+    title: str
+    unit: str
+    sensorType: str
+    lastMeasurement: Measurement
 
 # Get all sensor boxes from the API and return the ones that have been updated since "updatedSince"
 # returns a list of boxes with their id, name, latitude, longitude, height and exposure
@@ -23,18 +51,24 @@ def getUpdatedBox(updatedSince):
     # Filter the boxes that have been updated since "updatedSince"
     rtn = []
     for box in boxes.json():
-        if ('lastMeasurementAt' in box and int(time.mktime(time.strptime(box['lastMeasurementAt'], '%Y-%m-%dT%H:%M:%S.%fZ'))) > int(updatedSince)):
-            box_dict = {
-                'id': box['_id'],
-                'name': box['name'],
-                'exposure': box.get('exposure', None),
-            }
-            if box['currentLocation'] and box['currentLocation']['coordinates']:
-                box_dict['lat'] = box['currentLocation']['coordinates'][0]
-                box_dict['lon'] = box['currentLocation']['coordinates'][1]
-                if len(box['currentLocation']['coordinates']) == 3:
-                    box_dict['height'] = box['currentLocation']['coordinates'][2]
-            rtn.append(box_dict)
+        #print(box)
+        try:
+            box_data = Box.model_validate(box)
+            #print(box_data)
+            if int(time.mktime(time.strptime(box['lastMeasurementAt'], '%Y-%m-%dT%H:%M:%S.%fZ'))) > int(updatedSince):
+                box_dict = {
+                    'id': box['_id'],
+                    'name': box['name'],
+                    'exposure': box.get('exposure', None),
+                }
+                if box['currentLocation'] and box['currentLocation']['coordinates']:
+                    box_dict['lat'] = box['currentLocation']['coordinates'][0]
+                    box_dict['lon'] = box['currentLocation']['coordinates'][1]
+                    if len(box['currentLocation']['coordinates']) == 3:
+                        box_dict['height'] = box['currentLocation']['coordinates'][2]
+                rtn.append(box_dict)
+        except ValidationError as e:
+            next
     print("Boxes updated since " + str(updatedSince) + ": " + str(len(rtn)))
     # Return the boxes that have been updated since "updatedSince"
     return rtn
@@ -53,7 +87,10 @@ def getLastMeasurement(box):
             print("Producer is not connected to Kafka")
             exit(1)
         for sensor in measurements.json()['sensors']:
-            if ('lastMeasurement' in sensor and sensor['lastMeasurement'] and 'value' in sensor['lastMeasurement']):
+            #print(sensor)
+            try:
+                sensor_data = Sensor.model_validate(sensor)
+                #print(sensor_data)
                 message = {
                     'boxId': box['id'],
                     'boxName': box['name'],
@@ -68,11 +105,15 @@ def getLastMeasurement(box):
                     'unit': sensor.get('unit', None),
                     'createdAt': sensor['lastMeasurement']['createdAt']
                 }
+                #print(message)
                 try:
                     producer.send(SENSOR_DATA_TOPIC, message)
                     print("Sensor data sent to Kafka")
                 except Exception as e:
                     print("Error sending message to Kafka: " + str(e))
+            except ValidationError as e:
+                print("Invlaid sensor data: "+ str(e))
+                next
         producer.flush()
     except Exception as e:
         print("Cannot connect to Kafka: " + str(e))

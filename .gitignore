@@ -42,3 +42,4 @@ grafana/data/
 grafana/plugins/
 grafana/provisioning/dashboards/*.bak
 prometheus/data/
+data-ingestor/test.ipynb
