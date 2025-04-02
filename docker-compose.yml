@@ -88,6 +88,14 @@ services:
       - ./data-processor:/app
     depends_on:
       - kafka
+      - mongodb
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKER: ${KAFKA_BROKER:-kafka:9092}
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-iot.raw-data.opensensemap}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017}
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       kafka_network:
         aliases:
