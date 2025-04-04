@@ -11,7 +11,9 @@ A containerized, microservice-based pipeline for real-time sensor ingestion, pro
 python onboard.py
 ```
 This will copy `.env.template` to `.env` if not already created and start all services using `make up`.
+Once the .env file is created, populate the environmental variables with appropriate values.
 
+---
 
 ## Microservices Overview
 
@@ -26,17 +28,6 @@ This will copy `.env.template` to `.env` if not already created and start all se
 | prometheus      | 9090 | Metrics scraping                                |
 | kafka-ui        | 8080 | Inspect Kafka topics                            |
 
----
-
-## Developer Onboarding
-
-### One-Step Setup
-
-```bash
-python onboard.py
-```
-
-This will copy `.env.template` to `.env` if not already created and start all services using `make up`.
 
 ---
 
@@ -95,7 +86,6 @@ These scripts use the `kafka-python` library and will work on macOS, Windows, an
 
 To test FastAPI `/health` endpoints:
 
-```bash
 pytest tests/data-ingestor/test_health.py
 pytest tests/data-processor/test_health.py
 pytest tests/api-gateway/test_health.py
