@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Schema Errors Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <style>
+        body { font-family: sans-serif; padding: 2em; background: #f6f6f6; }
+        .controls { margin-bottom: 1em; }
+        .error-list { background: white; border-radius: 8px; padding: 1em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .error-item { border-bottom: 1px solid #eee; padding: 0.5em 0; }
+        .error-item:last-child { border-bottom: none; }
+        button, select { margin-right: 10px; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>📋 Schema Errors</h1>
+    <div class="controls">
+        <label for="limit">Messages:</label>
+        <select id="limit" name="limit"
+            hx-get="/schema-errors-html"
+            hx-target=".error-list"
+            hx-trigger="change">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+
+        <button onclick="window.location='/schema-errors.json'">Download JSON</button>
+        <button onclick="window.location='/schema-errors.csv'">Download CSV</button>
+    </div>
+    <div class="error-list" hx-get="/schema-errors-html" hx-trigger="load"></div>
+</body>
+</html>

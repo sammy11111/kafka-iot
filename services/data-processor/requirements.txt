@@ -1,0 +1,5 @@
+pymongo
+kafka-python
+python-dotenv
+fastapi
+uvicorn

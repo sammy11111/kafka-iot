@@ -1,0 +1,17 @@
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy all service code (main.py, etc.) and libs
+COPY . /app
+
+# Set module resolution path
+ENV PYTHONPATH=/app
+
+# Run the service
+CMD ["python", "main.py"]

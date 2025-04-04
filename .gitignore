@@ -1,44 +1,77 @@
-# Python cache and logs
+# Python bytecode and cache
 __pycache__/
 *.py[cod]
-*.log
+*.pyo
+*.pyd
+*.pkl
 
-# Environment
-.env
+# Environments
 .venv/
-env/
 venv/
+env/
+ENV/
 
-# Docker artifacts
-*.pid
-docker-compose.override.yml
+# Compiled C extensions
+*.so
 
-# OS generated files
-.DS_Store
-
-# Editor folders
-.idea/
-.vscode/
-
-# Build artifacts
+# Distribution/build artifacts
 build/
 dist/
 *.egg-info/
+.eggs/
 
-# Unit test cache
+# Logs and output
+*.log
+*.pid
+*.out
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+
+# macOS and Windows system files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Environment config
+.env
+.env.*
+.envrc
+
+# Kafka CLI state or debug
+*.db
+*.lock
+*.bak
+
+# Node (if you add a frontend later)
+node_modules/
+
+# Pytest
+.cache/
 .pytest_cache/
-.tox/
-.nox/
 
-# Coverage
-.coverage*
+# Shell scripts
+*.sh
+
+# Coverage reports
 htmlcov/
+coverage.xml
+.coverage
+.coverage.*
 
-# Jupyter
-.ipynb_checkpoints
+# OS and miscellaneous
+*.tmp
+*.bak
+*.orig
+*~
 
-# Grafana & Prometheus (custom dashboards, data)
-grafana/data/
-grafana/plugins/
-grafana/provisioning/dashboards/*.bak
-prometheus/data/
+# Git
+*.orig

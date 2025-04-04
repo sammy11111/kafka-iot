@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -11,9 +9,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     networks:
-      kafka_network:
-        aliases:
-          - zookeeper
+      - kafka_network
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -31,75 +27,47 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    networks:
-      kafka_network:
-        aliases:
-          - kafka
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-  
-  kafka-init:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka-init
-    command: [ "/bin/bash", "-c", "/create_topic.sh"]
-    environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-    depends_on:
-      kafka:
-        condition: service_healthy
     volumes:
-      - type: bind
-        source: ./scripts/create_topic.sh
-        target: /create_topic.sh
-    init: true
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "unset JMX_PORT; kafka-topics --bootstrap-server kafka:9092 --list > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 90s
     networks:
-      kafka_network:
-        aliases:
-          - kafka-init
+      - kafka_network
 
   data-ingestor:
     build:
-      context: ./data-ingestor
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: services/data-ingestor/Dockerfile.dev
     container_name: data-ingestor
     restart: always
-    environment:
-      - KAFKA_BOOTSTRAP_SERVER=${KAFKA_BOOTSTRAP_SERVER:-kafka:29092}
+    env_file: .env
     volumes:
-      - ./data-ingestor:/app
+      - ./services/data-ingestor:/app
     depends_on:
       kafka:
         condition: service_healthy
     networks:
-      kafka_network:
-        aliases:
-          - data-ingestor
+      - kafka_network
 
   data-processor:
     build:
-      context: ./data-processor
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: services/data-processor/Dockerfile.dev
     container_name: data-processor
     restart: always
+    env_file: .env
     volumes:
-      - ./data-processor:/app
+      - ./services/data-processor:/app
     depends_on:
       - kafka
       - mongodb
-    env_file:
-      - .env
-    environment:
-      KAFKA_BROKER: ${KAFKA_BROKER:-kafka:9092}
-      KAFKA_TOPIC: ${KAFKA_TOPIC:-iot.raw-data.opensensemap}
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017}
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     networks:
-      kafka_network:
-        aliases:
-          - data-processor
+      - kafka_network
 
   mongodb:
     image: mongo:6.0.6
@@ -110,9 +78,7 @@ services:
     volumes:
       - mongo_data:/data/db
     networks:
-      kafka_network:
-        aliases:
-          - mongodb
+      - kafka_network
     healthcheck:
       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 30s
@@ -125,33 +91,24 @@ services:
     restart: always
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
-    depends_on:
-      - mongodb
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
-      - GF_USERS_ALLOW_SIGN_UP=${GF_USERS_ALLOW_SIGN_UP:-false}
+    env_file: .env
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     networks:
-      kafka_network:
-        aliases:
-          - grafana
+      - kafka_network
 
   prometheus:
     image: prom/prometheus:v2.48.1
     container_name: prometheus
     restart: always
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
-      kafka_network:
-        aliases:
-          - prometheus
+      - kafka_network
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.1
@@ -159,16 +116,24 @@ services:
     restart: always
     ports:
       - "${KAFKA_UI_PORT:-8080}:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: ${KAFKA_CLUSTERS_0_NAME:-local}
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS:-kafka:29092}
-      KAFKA_CLUSTERS_0_ZOOKEEPER: ${KAFKA_CLUSTERS_0_ZOOKEEPER:-zookeeper:2181}
+    env_file: .env
     depends_on:
       - kafka
     networks:
-      kafka_network:
-        aliases:
-          - kafka-ui
+      - kafka_network
+
+  schema-inspector:
+    build:
+      context: .
+      dockerfile: services/schema-inspector/Dockerfile.dev
+    ports:
+      - "${SCHEMA_INSPECTOR_PORT:-8004}:8004"
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - kafka_network
 
 volumes:
   kafka_data:
