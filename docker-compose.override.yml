@@ -1,0 +1,17 @@
+services:
+  kafka-init:
+    image: python:3.10-slim
+    container_name: kafka-bootstrap
+    command: ["python", "scripts/kafka_tools.py", "topic", "create", "--broker=kafka:9092", "--topic=iot.raw-data.opensensemap"]
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./scripts
+        target: /scripts
+    init: true
+    networks:
+      - kafka_network

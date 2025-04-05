@@ -38,13 +38,13 @@ dist/
 Thumbs.db
 
 # Docker
-docker-compose.override.yml
 .dockerignore
 
 # Environment config
 .env
 .env.*
 .envrc
+!.env.template
 
 # Kafka CLI state or debug
 *.db
