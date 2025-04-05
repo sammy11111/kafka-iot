@@ -9,6 +9,7 @@ from kafka.errors import TopicAlreadyExistsError, UnknownTopicOrPartitionError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
+
 def with_retries(func):
     def wrapper(*args, **kwargs):
         for attempt in range(5):
@@ -18,12 +19,16 @@ def with_retries(func):
                 logging.warning(f"Attempt {attempt + 1} failed: {e}")
                 time.sleep(5)
         raise Exception("Max retries exceeded.")
+
     return wrapper
+
 
 @with_retries
 def create_topic(broker, topic, partitions, replication):
     admin_client = KafkaAdminClient(bootstrap_servers=broker)
-    topic_obj = NewTopic(name=topic, num_partitions=partitions, replication_factor=replication)
+    topic_obj = NewTopic(
+        name=topic, num_partitions=partitions, replication_factor=replication
+    )
     try:
         admin_client.create_topics([topic_obj])
         logging.info(f"Created topic: {topic}")
@@ -31,6 +36,7 @@ def create_topic(broker, topic, partitions, replication):
         logging.info(f"Topic already exists: {topic}")
     finally:
         admin_client.close()
+
 
 @with_retries
 def delete_topic(broker, topic):
@@ -43,12 +49,14 @@ def delete_topic(broker, topic):
     finally:
         admin_client.close()
 
+
 @with_retries
 def list_topics(broker):
     consumer = KafkaConsumer(bootstrap_servers=broker)
     topics = consumer.topics()
     for t in sorted(topics):
         print(t)
+
 
 def register_schema(subject, file, registry_url):
     with open(file, "r") as f:
@@ -62,6 +70,7 @@ def register_schema(subject, file, registry_url):
     else:
         logging.error(f"Error registering schema: {response.text}")
 
+
 def get_schema(subject, registry_url):
     url = f"{registry_url}/subjects/{subject}/versions/latest"
     response = requests.get(url)
@@ -71,6 +80,7 @@ def get_schema(subject, registry_url):
     else:
         logging.error(f"Error fetching schema: {response.text}")
 
+
 def list_schemas(registry_url):
     url = f"{registry_url}/subjects"
     response = requests.get(url)
@@ -79,6 +89,7 @@ def list_schemas(registry_url):
             print(subject)
     else:
         logging.error(f"Error listing schemas: {response.text}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Kafka Tools CLI")

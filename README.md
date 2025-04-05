@@ -7,27 +7,29 @@ A containerized, microservice-based pipeline for real-time sensor ingestion, pro
 ## Developer Onboarding
 
 ### One-Step Setup
+
 ```bash
 python onboard.py
 ```
+
 This will copy `.env.template` to `.env` if not already created and start all services using `make up`.
-Once the .env file is created, populate the environmental variables with appropriate values.
+Once the `.env` file is created, populate the environmental variables with appropriate values.
 
 ---
 
 ## Microservices Overview
 
-| Service         | Port | Description                                     |
-|----------------|------|-------------------------------------------------|
-| api-gateway     | 8000 | Entry point for routing & orchestration         |
-| data-ingestor   | 8001 | Polls OpenSenseMap, sends raw data to Kafka     |
-| data-processor  | 8002 | Consumes from Kafka, validates & stores to DB   |
-| data-aggregator | 8003 | Future: aggregate for visualization             |
-| mongodb         | 27017| Stores structured sensor data                   |
-| grafana         | 3000 | Dashboards via MongoDB plugin                   |
-| prometheus      | 9090 | Metrics scraping                                |
-| kafka-ui        | 8080 | Inspect Kafka topics                            |
-
+| Service           | Port Env Var            | Description                                     |
+|------------------|--------------------------|-------------------------------------------------|
+| api-gateway       | `API_GATEWAY_PORT`       | Entry point for routing & orchestration         |
+| data-ingestor     | `DATA_INGESTOR_PORT`     | Polls OpenSenseMap, sends raw data to Kafka     |
+| data-processor    | `DATA_PROCESSOR_PORT`    | Consumes from Kafka, validates & stores to DB   |
+| data-aggregator   | `DATA_AGGREGATOR_PORT`   | Future: aggregate for visualization             |
+| schema-inspector  | `SCHEMA_INSPECTOR_PORT`  | Views recent schema validation errors           |
+| mongodb           | `MONGO_PORT`             | Stores structured sensor data                   |
+| grafana           | `GRAFANA_PORT`           | Dashboards via MongoDB plugin                   |
+| prometheus        | `PROMETHEUS_PORT`        | Metrics scraping                                |
+| kafka-ui          | `KAFKA_UI_PORT`          | Inspect Kafka topics                            |
 
 ---
 
@@ -35,102 +37,73 @@ Once the .env file is created, populate the environmental variables with appropr
 
 ```bash
 make up                         # Start services
-make dev-up                     # Start all services using docker-compose.yml + docker-compose.override.yml (full dev stack)
+make dev-up                     # Start all services using docker-compose.yml + docker-compose.override.yml
 make down                       # Stop services
 make restart                    # Restart all with rebuild
 make logs SERVICE=x             # Tail logs for a specific service
+make logs-ingestor              # Tail logs for data-ingestor
+make logs-processor             # Tail logs for data-processor
+make logs-gateway               # Tail logs for api-gateway
+make schema-inspector-logs     # Tail logs for schema-inspector
 make rebuild-service SERVICE=x  # Rebuild one service
+make shell SERVICE=x            # Enter a shell in the running container
+make status                     # Show running containers and mapped ports
 make health                     # Ping /health endpoint on all services
-make lint                       # Run flake8 on services and libs
-make format                     # Run black formatter on services and libs
-make create-topic               # Create the OpenSenseMap topic in Kafka
-make delete-topic               # Delete the OpenSenseMap topic from Kafka
-make list-topics                # List all Kafka topics
 make install-deps               # Install Python packages from requirements.txt
+make build-base                 # Build the base Python image used by services
+make dev-reset                  # Rebuild base and reset full dev environment
 make help                       # List all available Makefile tasks
 ```
 
 ---
 
-## Kafka Topic Management (Python CLI Tools)
+## Docker Compose Targets
 
-All scripts are located in `scripts/` and are cross-platform Python tools.
+- `make up`: Run core services
+- `make dev-up`: Run all services in dev mode
+- `make down`: Stop all running containers
+- `make restart`: Stop and restart everything with rebuild
+- `make status`: View currently running containers and their port mappings
 
-### Create a Topic
-```bash
-make create-topic
-# or manually
-python scripts/create_topic.py --broker kafka:9092 --topic iot.raw-data.opensensemap
-```
+---
 
-### Delete a Topic
-```bash
-make delete-topic
-# or manually
-python scripts/delete_topic.py --broker kafka:9092 --topic iot.raw-data.opensensemap
-```
-
-### List Topics
-```bash
-make list-topics
-# or manually
-python scripts/list_topics.py --broker kafka:9092
-```
-
-# Register schema
-python scripts/kafka_tools.py schema register --subject my-subject --file path/to/schema.json
-```
-
-These scripts use the `kafka-python` library and will work on macOS, Windows, and Linux.
-## Running Tests
-
-To test FastAPI `/health` endpoints:
-
-pytest tests/data-ingestor/test_health.py
-pytest tests/data-processor/test_health.py
-pytest tests/api-gateway/test_health.py
-```
-
-You can run all with:
+## Health Check Commands
 
 ```bash
-pytest tests/
+make health
+```
+
+Pings:
+
+- `http://localhost:$API_GATEWAY_PORT/health`
+- `http://localhost:$DATA_INGESTOR_PORT/health`
+- `http://localhost:$DATA_PROCESSOR_PORT/health`
+
+---
+
+## Compose Profiles
+
+```bash
+make test     # Compose profile for tests
+make prod     # Compose profile for production
 ```
 
 ---
 
-## VSCode Development
+## Dev Setup
 
-1. Open the project folder in VSCode
-2. Install the Python and Docker extensions
-3. Your `.vscode/settings.json` and `launch.json` are pre-configured
-4. Press F5 to run a selected microservice using hot reload
-
----
-
-## PyCharm Development
-
-1. Set the project interpreter and working directory to the appropriate service
-2. Use `.env` for environment variables
-3. Add `libs/` to your interpreter paths for shared modules
-
----
-
-## Devcontainer Support
-
-If you're using VSCode Remote Containers:
-
-1. Open the folder in VSCode
-2. Reopen in Container when prompted
-3. All dependencies will auto-install
+```bash
+make install-deps    # Installs Python requirements
+make build-base      # Builds shared Python base image
+```
 
 ---
 
 ## Monitoring Dashboards
 
-- Grafana: http://localhost:3000 (admin/admin)
-- Prometheus: http://localhost:9090
-- Kafka UI: http://localhost:8080
+- Grafana: [http://localhost:$GRAFANA_PORT](http://localhost:$GRAFANA_PORT) (admin/admin)
+- Prometheus: [http://localhost:$PROMETHEUS_PORT](http://localhost:$PROMETHEUS_PORT)
+- Kafka UI: [http://localhost:$KAFKA_UI_PORT](http://localhost:$KAFKA_UI_PORT)
 
 ---
 
@@ -142,6 +115,7 @@ services/
   data-ingestor/
   data-processor/
   data-aggregator/
+  schema-inspector/
 libs/
   kafka_utils.py
   message_schemas.py
@@ -164,71 +138,42 @@ tests/
 
 MIT License (add LICENSE file)
 
-## Kafka CLI Tools (kafka-tools.py)
-
-A unified Python CLI tool for managing Kafka topics and JSON schemas.
-
-### Topic Commands
-
-Create a topic:
-```bash
-python scripts/kafka_tools.py topic create --topic my.topic --broker kafka:9092
-```
-
-Delete a topic:
-```bash
-python scripts/kafka_tools.py topic delete --topic my.topic --broker kafka:9092
-```
-
-List topics:
-```bash
-python scripts/kafka_tools.py topic list --broker kafka:9092
-```
-
-### Schema Commands
-
-Register a schema:
-```bash
-python scripts/kafka_tools.py schema register --subject my.topic --file schema.json
-```
-
-Get the latest schema for a subject:
-```bash
-python scripts/kafka_tools.py schema get --subject my.topic
-```
-
-List all schema subjects:
-```bash
-python scripts/kafka_tools.py schema list
-```
-
-The default schema registry URL is `http://localhost:8081`, but you can override it using `--registry-url`.
+---
 
 ## Schema Inspector Dashboard
 
-The `schema-inspector` service provides a developer-friendly dashboard to view recent schema validation errors.
+The `schema-inspector` service offers a web UI for recent schema validation errors.
 
 ### Endpoint
 
-```http
+```
 GET /schema-errors?limit=10
 ```
 
 ### Example Usage
 
-View the 5 most recent schema validation errors:
-
 ```bash
-curl http://localhost:8004/schema-errors?limit=5
+curl http://localhost:$SCHEMA_INSPECTOR_PORT/schema-errors?limit=5
 ```
 
-### Run Logs for Schema Inspector
+### Logs
 
 ```bash
 make schema-inspector-logs
 ```
 
-### Planned Enhancements
+### Planned Features
 
-- Pagination and timestamp filters (e.g., `?after=...&before=...`)
-- Front-end dashboard for viewing, searching, and exporting error logs
+- Pagination, timestamp filters
+- Web dashboard for searching/exporting error logs
+
+---
+
+## Notes
+
+- All FastAPI ports are now controlled via the `.env` file (e.g., `DATA_PROCESSOR_PORT`, `SCHEMA_INSPECTOR_PORT`) and injected using `docker-compose`.
+- No ports are hardcoded in Dockerfiles. Each microservice uses:
+  ```Dockerfile
+  CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT --reload"]
+  ```
+- Ensure `env_file: .env` and `environment: - PORT=...` are configured in `docker-compose.yml` for each service.

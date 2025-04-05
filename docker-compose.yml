@@ -1,4 +1,37 @@
 services:
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile.dev
+    container_name: api-gateway
+    restart: always
+    env_file: .env
+    environment:
+      - PORT=${API_GATEWAY_PORT}
+    ports:
+      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
+    volumes:
+      - ./services/api-gateway:/app
+    networks:
+      - kafka_network
+
+  data-aggregator:
+    build:
+      context: .
+      dockerfile: services/data-aggregator/Dockerfile.dev
+    container_name: data-aggregator
+    restart: always
+    env_file: .env
+    environment:
+      - PORT=${DATA_AGGREGATOR_PORT}
+    ports:
+      - "${DATA_AGGREGATOR_PORT}:${DATA_AGGREGATOR_PORT}"
+    volumes:
+      - ./services/data-aggregator:/app
+    networks:
+      - kafka_network
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -45,6 +78,10 @@ services:
     container_name: data-ingestor
     restart: always
     env_file: .env
+    environment:
+      - PORT=${DATA_INGESTOR_PORT}
+    ports:
+      - "${DATA_INGESTOR_PORT}:${DATA_INGESTOR_PORT}"
     volumes:
       - ./services/data-ingestor:/app
     depends_on:
@@ -60,12 +97,15 @@ services:
     container_name: data-processor
     restart: always
     env_file: .env
+    environment:
+      - PORT=${DATA_PROCESSOR_PORT}
+    ports:
+      - "${DATA_PROCESSOR_PORT}:${DATA_PROCESSOR_PORT}"
     volumes:
       - ./services/data-processor:/app
     depends_on:
       - kafka
       - mongodb
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - kafka_network
 
@@ -126,8 +166,10 @@ services:
     build:
       context: .
       dockerfile: services/schema-inspector/Dockerfile.dev
+    environment:
+    - PORT=${SCHEMA_INSPECTOR_PORT}
     ports:
-      - "${SCHEMA_INSPECTOR_PORT:-8004}:8004"
+    - "${SCHEMA_INSPECTOR_PORT}:${SCHEMA_INSPECTOR_PORT}"
     env_file: .env
     depends_on:
       kafka:

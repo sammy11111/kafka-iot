@@ -5,6 +5,7 @@ from app.services.kafka_producer import produce_to_kafka
 
 sensor_router = APIRouter()
 
+
 @sensor_router.post("/")
 async def post_sensor_data(sensor_data: SensorData):
     try:

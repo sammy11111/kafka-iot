@@ -7,4 +7,3 @@ Planned service for summarizing time-series data or generating analytical report
 - Batch aggregation using `pandas`
 - Scheduling via `APScheduler` or Celery
 ```
-

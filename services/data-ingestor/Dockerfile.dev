@@ -1,17 +1,6 @@
-FROM python:3.10-slim
+FROM base-python-dev
 
-# Set working directory
-WORKDIR /app
-
-# Copy requirements and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy all service code (main.py, etc.) and libs
+WORKDIR /app/services/data-ingestor
 COPY . /app
 
-# Set module resolution path
-ENV PYTHONPATH=/app
-
-# Run the service
-CMD ["python", "main.py"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT --reload"]
