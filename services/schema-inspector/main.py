@@ -15,12 +15,15 @@ import io
 # FastAPI App with Health Check
 # ----------------------
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-templates = Jinja2Templates(directory="templates")
+@app.get("/")
+def render_index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 ERROR_TOPIC = "iot.errors.raw-data"

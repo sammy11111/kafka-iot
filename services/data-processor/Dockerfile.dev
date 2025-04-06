@@ -5,5 +5,6 @@ WORKDIR /app
 COPY services/data-processor /app
 COPY libs /app/libs
 RUN python -c "import libs.kafka_utils"
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port \${DATA_PROCESSOR_PORT:-8002} --reload"]
+ENV PORT=${DATA_PROCESSOR_PORT}
+CMD uvicorn main:app --host 0.0.0.0 --port ${DATA_PROCESSOR_PORT:-8002} --reload
 
