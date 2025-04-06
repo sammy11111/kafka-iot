@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "libs")))
+
 import json
 import logging
 import os
@@ -9,6 +13,15 @@ from fastapi import FastAPI
 import pymongo
 import jsonschema
 from libs.kafka_utils import create_topic_if_missing
+
+# ----------------------
+# FastAPI App with Health Check
+# ----------------------
+app = FastAPI()
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -44,8 +57,6 @@ collection = mongo_client["iot"]["sensor_data"]
 # ----------------------
 # Schema Utilities
 # ----------------------
-
-
 def get_latest_schema():
     url = f"{SCHEMA_REGISTRY_URL}/subjects/{SCHEMA_SUBJECT}/versions/latest"
     try:
@@ -59,7 +70,6 @@ def get_latest_schema():
 
 schema = get_latest_schema()
 
-
 def validate(data):
     try:
         jsonschema.validate(instance=data, schema=schema)
@@ -67,7 +77,6 @@ def validate(data):
     except jsonschema.exceptions.ValidationError as e:
         logging.warning(f"Validation error: {e.message}")
         return False
-
 
 def process_message(msg):
     if validate(msg):
@@ -77,29 +86,13 @@ def process_message(msg):
         producer.send(ERROR_TOPIC, msg)
         logging.info("Sent invalid message to error topic.")
 
-
 # ----------------------
 # Background Worker
 # ----------------------
-
-
 def start_ingestion_loop():
     logging.info("Starting data-processor with schema validation loop...")
     for message in consumer:
         process_message(message.value)
-
-
-# ----------------------
-# FastAPI App with Health Check
-# ----------------------
-
-app = FastAPI()
-
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
-
 
 # Start ingestion in background when app loads
 @app.on_event("startup")

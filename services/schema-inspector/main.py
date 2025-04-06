@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "libs")))
+
 from fastapi import FastAPI, Query, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
@@ -7,7 +11,15 @@ import json
 import csv
 import io
 
+# ----------------------
+# FastAPI App with Health Check
+# ----------------------
 app = FastAPI()
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 templates = Jinja2Templates(directory="templates")
 
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
@@ -35,11 +47,6 @@ def fetch_errors(limit: int):
         if len(messages) >= limit:
             break
     return messages[::-1]
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
-
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
@@ -80,3 +87,4 @@ def schema_errors_csv(limit: int = 50):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=schema_errors.csv"},
     )
+

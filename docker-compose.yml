@@ -1,187 +1,53 @@
 services:
-
-  api-gateway:
-    build:
-      context: .
-      dockerfile: services/api-gateway/Dockerfile.dev
-    container_name: api-gateway
-    restart: always
-    env_file: .env
-    environment:
-      - PORT=${API_GATEWAY_PORT}
-    ports:
-      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
-    volumes:
-      - ./services/api-gateway:/app
-    networks:
-      - kafka_network
-
-  data-aggregator:
-    build:
-      context: .
-      dockerfile: services/data-aggregator/Dockerfile.dev
-    container_name: data-aggregator
-    restart: always
-    env_file: .env
-    environment:
-      - PORT=${DATA_AGGREGATOR_PORT}
-    ports:
-      - "${DATA_AGGREGATOR_PORT}:${DATA_AGGREGATOR_PORT}"
-    volumes:
-      - ./services/data-aggregator:/app
-    networks:
-      - kafka_network
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
-    restart: always
     ports:
-      - "2181:2181"
+      - "${ZOOKEEPER_PORT:-2181}:2181"
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - kafka_network
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_PORT:-2181}
+      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME:-2000}
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo ruok | nc localhost ${ZOOKEEPER_PORT:-2181} | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka
-    restart: always
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    environment:
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
+      KAFKA_LISTENERS: ${KAFKA_LISTENERS}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
     depends_on:
       - zookeeper
-    ports:
-      - "9092:9092"
-      - "29092:29092"
-    environment:
-      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID:-1}
-      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT:-zookeeper:2181}
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    volumes:
-      - kafka_data:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD-SHELL", "unset JMX_PORT; kafka-topics --bootstrap-server kafka:29092 --list > /dev/null || exit 1"]
-      interval: 30s
-      timeout: 25s
-      retries: 6
-      start_period: 90s
-    networks:
-      - kafka_network
-
-  data-ingestor:
-    build:
-      context: .
-      dockerfile: services/data-ingestor/Dockerfile.dev
-    container_name: data-ingestor
-    restart: always
-    env_file: .env
-    environment:
-      - PORT=${DATA_INGESTOR_PORT}
-    ports:
-      - "${DATA_INGESTOR_PORT}:${DATA_INGESTOR_PORT}"
-    volumes:
-      - ./services/data-ingestor:/app
-    depends_on:
-      kafka:
-        condition: service_healthy
-    networks:
-      - kafka_network
-
-  data-processor:
-    build:
-      context: .
-      dockerfile: services/data-processor/Dockerfile.dev
-    container_name: data-processor
-    restart: always
-    env_file: .env
-    environment:
-      - PORT=${DATA_PROCESSOR_PORT}
-    ports:
-      - "${DATA_PROCESSOR_PORT}:${DATA_PROCESSOR_PORT}"
-    volumes:
-      - ./services/data-processor:/app
-    depends_on:
-      - kafka
-      - mongodb
-    networks:
-      - kafka_network
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   mongodb:
     image: mongo:6.0.6
-    container_name: mongodb
-    restart: always
     ports:
       - "${MONGO_PORT:-27017}:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - kafka_network
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  grafana:
-    image: grafana/grafana:10.2.3
-    container_name: grafana
-    restart: always
-    ports:
-      - "${GRAFANA_PORT:-3000}:3000"
-    env_file: .env
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    networks:
-      - kafka_network
 
   prometheus:
     image: prom/prometheus:v2.48.1
-    container_name: prometheus
-    restart: always
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - kafka_network
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.1
-    container_name: kafka-ui
-    restart: always
     ports:
       - "${KAFKA_UI_PORT:-8080}:8080"
-    env_file: .env
-    depends_on:
-      - kafka
-    networks:
-      - kafka_network
-
-  schema-inspector:
-    build:
-      context: .
-      dockerfile: services/schema-inspector/Dockerfile.dev
-    environment:
-    - PORT=${SCHEMA_INSPECTOR_PORT}
-    ports:
-    - "${SCHEMA_INSPECTOR_PORT}:${SCHEMA_INSPECTOR_PORT}"
-    env_file: .env
-    depends_on:
-      kafka:
-        condition: service_healthy
-    networks:
-      - kafka_network
-
-volumes:
-  kafka_data:
-  mongo_data:
-  grafana_data:
-
-networks:
-  kafka_network:
-    driver: bridge

@@ -1,6 +1,9 @@
+# services/data-ingestor/Dockerfile.dev
 FROM base-python-dev
+WORKDIR /app
 
-WORKDIR /app/services/data-ingestor
-COPY . /app
-
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT --reload"]
+COPY services/data-ingestor /app
+COPY libs /app/libs
+RUN python -c "import libs.kafka_utils"
+ENV PORT=${DATA_INGESTOR_PORT}
+CMD uvicorn main:app --host 0.0.0.0 --port ${DATA_INGESTOR_PORT:-8001} --reload
