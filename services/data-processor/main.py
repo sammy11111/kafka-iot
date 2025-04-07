@@ -14,6 +14,20 @@ import pymongo
 import jsonschema
 from libs.kafka_utils import create_topic_if_missing
 
+# ----------------------------------------
+# Load environment variables from root .env
+# ----------------------------------------
+dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path=dotenv_path)
+
+# ----------------------------------------
+# Add shared libraries to sys.path
+# ----------------------------------------
+libs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../libs"))
+if libs_path not in sys.path:
+    sys.path.append(libs_path)
+
 # ----------------------
 # FastAPI App with Health Check
 # ----------------------
@@ -33,7 +47,7 @@ KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "iot.raw-data.opensensemap")
 ERROR_TOPIC = "iot.errors.raw-data"
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongodb:27017")
-SCHEMA_REGISTRY_URL = os.getenv("SCHEMA_REGISTRY_URL", "http://localhost:8081")
+SCHEMA_URL = os.getenv("SCHEMA_REGISTRY_URL", "http://localhost:8081")
 SCHEMA_SUBJECT = f"{KAFKA_TOPIC}-value"
 
 create_topic_if_missing(KAFKA_BROKER, ERROR_TOPIC)
@@ -58,7 +72,7 @@ collection = mongo_client["iot"]["sensor_data"]
 # Schema Utilities
 # ----------------------
 def get_latest_schema():
-    url = f"{SCHEMA_REGISTRY_URL}/subjects/{SCHEMA_SUBJECT}/versions/latest"
+    url = f"{SCHEMA_URL}/subjects/{SCHEMA_SUBJECT}/versions/latest"
     try:
         res = requests.get(url)
         res.raise_for_status()
@@ -66,7 +80,6 @@ def get_latest_schema():
     except Exception as e:
         logging.error(f"Failed to fetch schema: {e}")
         return None
-
 
 schema = get_latest_schema()
 
