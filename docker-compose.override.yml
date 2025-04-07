@@ -1,17 +1,80 @@
 services:
-  kafka-init:
-    image: python:3.10-slim
-    container_name: kafka-bootstrap
-    command: ["python", "scripts/kafka_tools.py", "topic", "create", "--broker=kafka:9092", "--topic=iot.raw-data.opensensemap"]
-    environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile.dev
+    container_name: api-gateway
+    ports:
+      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
+    volumes:
+      - ./services/api-gateway:/app
+      - ./libs:/app/libs:ro
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  data-aggregator:
+    build:
+      context: .
+      dockerfile: services/data-aggregator/Dockerfile.dev
+    container_name: data-aggregator
+    ports:
+      - "${DATA_AGGREGATOR_PORT}:${DATA_AGGREGATOR_PORT}"
+    volumes:
+      - ./services/data-aggregator:/app
+      - ./libs:/app/libs:ro
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  data-ingestor:
+    build:
+      context: .
+      dockerfile: services/data-ingestor/Dockerfile.dev
+    container_name: data-ingestor
+    ports:
+      - "${DATA_INGESTOR_PORT}:${DATA_INGESTOR_PORT}"
+    volumes:
+      - ./services/data-ingestor:/app
+      - ./libs:/app/libs:ro
     depends_on:
       kafka:
         condition: service_healthy
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  data-processor:
+    build:
+      context: .
+      dockerfile: services/data-processor/Dockerfile.dev
+    container_name: data-processor
+    ports:
+      - "${DATA_PROCESSOR_PORT}:${DATA_PROCESSOR_PORT}"
     volumes:
-      - type: bind
-        source: ./scripts
-        target: /scripts
-    init: true
-    networks:
-      - kafka_network
+      - ./services/data-processor:/app
+      - ./libs:/app/libs:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  schema-inspector:
+    build:
+      context: .
+      dockerfile: services/schema-inspector/Dockerfile.dev
+    container_name: schema-inspector
+    ports:
+      - "${SCHEMA_INSPECTOR_PORT}:${SCHEMA_INSPECTOR_PORT}"
+    volumes:
+      - ./services/schema-inspector:/app
+      - ./libs:/app/libs:ro
+      - ./services/schema-inspector/templates:/app/templates:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: unless-stopped

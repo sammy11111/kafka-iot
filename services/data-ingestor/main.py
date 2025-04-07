@@ -12,6 +12,15 @@ from kafka.errors import NoBrokersAvailable
 from concurrent.futures import ThreadPoolExecutor
 
 # ----------------------------------------
+# FastAPI app and lifespan manager
+# ----------------------------------------
+app = FastAPI()
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+# ----------------------------------------
 # Load environment variables from root .env
 # ----------------------------------------
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
@@ -32,11 +41,6 @@ POOL_SIZE = 8  # Number of concurrent OpenSenseMap API requests
 TIME_WINDOW = 60  # Fetch boxes updated in the last 60 seconds
 SENSOR_DATA_TOPIC = "iot.raw-data.opensensemap"
 KAFKA_BOOTSTRAP_SERVER = os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:29092")
-
-# ----------------------------------------
-# FastAPI app and lifespan manager
-# ----------------------------------------
-app = FastAPI()
 
 print("🚀 DATA_INGESTOR PORT:", os.environ.get("PORT"))
 
@@ -60,10 +64,6 @@ async def lifespan(app: FastAPI):
 
 
 app.router.lifespan_context = lifespan
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
 
 # ----------------------------------------
 # Fetch sensor boxes updated since the given timestamp

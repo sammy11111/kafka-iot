@@ -1,9 +1,10 @@
+# services/data-processor/Dockerfile.dev
 FROM base-python-dev
-
 WORKDIR /app
-COPY . /app
 
-# Optional sanity check to debug inside container
-RUN python -c "import jsonschema"
+COPY services/data-processor /app
+COPY libs /app/libs
+RUN python -c "import libs.kafka_utils"
+ENV PORT=${DATA_PROCESSOR_PORT}
+CMD uvicorn main:app --host 0.0.0.0 --port ${DATA_PROCESSOR_PORT:-8002} --reload
 
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT --reload"]
