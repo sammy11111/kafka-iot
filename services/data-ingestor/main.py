@@ -39,10 +39,10 @@ if libs_path not in sys.path:
 # ----------------------------------------
 POOL_SIZE = 8  # Number of concurrent OpenSenseMap API requests
 TIME_WINDOW = 60  # Fetch boxes updated in the last 60 seconds
-SENSOR_DATA_TOPIC = "iot.raw-data.opensensemap"
-KAFKA_BOOTSTRAP_SERVER = os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:29092")
+SENSOR_DATA_TOPIC = os.environ.get("KAFKA_TOPIC", "iot.raw-data.opensensemap")
+KAFKA_BOOTSTRAP_SERVER = os.environ.get("KAFKA_BOOTSTRAP_SERVER", "kafka:29092")
 
-print("🚀 DATA_INGESTOR PORT:", os.environ.get("PORT"))
+print("🚀 DATA_INGESTOR PORT:", os.environ.get("DATA_INGESTOR_PORT"))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
