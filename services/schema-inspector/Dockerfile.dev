@@ -1,6 +1,14 @@
+# services/schema-inspector/Dockerfile.dev
 FROM base-python-dev
-
 WORKDIR /app
-COPY . /app
 
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT --reload"]
+COPY services/schema-inspector /app
+COPY libs /app/libs
+RUN python -c "import libs.kafka_utils"
+ENV PORT=${SCHEMA_INSPECTOR_PORT}
+CMD uvicorn main:app --host 0.0.0.0 --port ${SCHEMA_INSPECTOR_PORT:-8004} --reload
+
+
+
+
+
