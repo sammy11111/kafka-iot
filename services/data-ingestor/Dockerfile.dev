@@ -1,9 +1,24 @@
 # services/data-ingestor/Dockerfile.dev
 FROM base-python-dev
+
+# Set working directory inside container
 WORKDIR /app
 
+# Copy app source code and shared libs
 COPY services/data-ingestor /app
 COPY libs /app/libs
+
+# Install Docker CLI (for diagnostic docker info)
+RUN apt-get update && apt-get install -y docker.io
+
+# Optional sanity check (import test)
 RUN python -c "import libs.kafka_utils"
-ENV PORT=${DATA_INGESTOR_PORT}
-CMD uvicorn main:app --host 0.0.0.0 --port ${DATA_INGESTOR_PORT:-8001} --reload
+
+# Set environment variable so Python knows where to find shared code
+ENV PYTHONPATH="/app/libs"
+
+# Expose FastAPI service port
+ENV DATA_INGESTOR_PORT=8001
+
+# Run FastAPI with auto-reload
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
