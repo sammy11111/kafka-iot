@@ -37,6 +37,11 @@ services:
     volumes:
       - ./services/data-ingestor:/app
       - ./libs:/app/libs:ro
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DATA_INGESTOR_PORT=${DATA_INGESTOR_PORT}
+      - PYTHONPATH=/app/libs
     depends_on:
       kafka:
         condition: service_healthy
