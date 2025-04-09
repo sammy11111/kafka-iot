@@ -6,16 +6,12 @@ from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 from datetime import datetime, timezone
 
-# ----------------------------------------
 # Load environment variables from root .env
-# ----------------------------------------
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path=dotenv_path)
 
-# ----------------------------------------
-# Add shared libraries to sys.path
-# ----------------------------------------
+# Include shared libs in the path
 libs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../libs"))
 if libs_path not in sys.path:
     sys.path.append(libs_path)
@@ -51,36 +47,32 @@ def aggregate_data():
     # Build a list of flat records from the raw senseBox data.
     records = []
     for doc in raw_data:
-        box_id = doc.get("_id")
-        box_name = doc.get("name")
-        exposure = doc.get("exposure")
-        location = doc.get("currentLocation", {})
-        coords = location.get("coordinates", [])
-        lat = coords[0] if len(coords) >= 1 else None
-        lon = coords[1] if len(coords) >= 2 else None
+        # Parse timestamp from the "createdAt" field
+        try:
+            timestamp = pd.to_datetime(doc.get("createdAt"))
+        except Exception as e:
+            continue  # Skip record if timestamp conversion fails
 
-        # Process each sensor in the senseBox document
-        for sensor in doc.get("sensors", []):
-            last_measurement = sensor.get("lastMeasurement")
-            if last_measurement and "value" in last_measurement and "createdAt" in last_measurement:
-                try:
-                    timestamp = pd.to_datetime(last_measurement["createdAt"])
-                except Exception as e:
-                    continue  # Skip if timestamp conversion fails
-                record = {
-                    "timestamp": timestamp,
-                    "boxId": box_id,
-                    "boxName": box_name,
-                    "exposure": exposure,
-                    "lat": lat,
-                    "lon": lon,
-                    "sensorId": sensor.get("_id"),
-                    "sensorType": sensor.get("sensorType"),
-                    "phenomenon": sensor.get("title"),
-                    "value": last_measurement["value"],
-                    "unit": sensor.get("unit"),
-                }
-                records.append(record)
+        # Convert sensor value (string) to float. Skip document if conversion fails.
+        try:
+            value = float(doc.get("value", 0))
+        except (TypeError, ValueError):
+            continue
+
+        record = {
+            "timestamp": timestamp,
+            "boxId": doc.get("boxId"),
+            "boxName": doc.get("boxName"),
+            "exposure": doc.get("exposure"),
+            "lat": doc.get("lat"),
+            "lon": doc.get("lon"),
+            "sensorId": doc.get("sensorId"),
+            "sensorType": doc.get("sensorType"),
+            "phenomenon": doc.get("phenomenon"),
+            "value": value,
+            "unit": doc.get("unit"),
+        }
+        records.append(record)
 
     if not records:
         return {"message": "No valid sensor measurements found for aggregation"}
