@@ -41,6 +41,20 @@ services:
     image: prom/prometheus:v2.48.1
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ./alert.rules.yml:/etc/prometheus/alert.rules.yml
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    ports:
+      - "8081:8080"  # HostPort:ContainerPort
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
   grafana:
     image: grafana/grafana:10.2.3
