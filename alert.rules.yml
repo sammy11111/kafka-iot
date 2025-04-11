@@ -1,0 +1,20 @@
+groups:
+  - name: container-alerts
+    rules:
+      - alert: HighTotalContainerCPU
+        expr: rate(container_cpu_usage_seconds_total{id="/docker"}[1m]) * 100 > 80
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage across all Docker containers"
+          description: "CPU usage is above 80% for more than 1 minute."
+
+      - alert: HighTotalContainerMemory
+        expr: container_memory_usage_bytes{id="/docker"} / (1024 * 1024 * 1024) > 3
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Memory usage across all Docker containers"
+          description: "Memory usage is above 3GB for more than 1 minute."
