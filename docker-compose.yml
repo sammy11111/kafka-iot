@@ -24,6 +24,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
       KAFKA_LISTENERS: ${KAFKA_LISTENERS}
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+
     depends_on:
       - zookeeper
     healthcheck:
@@ -31,19 +32,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-
-  schema-registry:
-    image: confluentinc/cp-schema-registry:7.5.0
-    container_name: schema-registry
-    ports:
-      - "8081:8081"
-    environment:
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka:9092"
-      SCHEMA_REGISTRY_HOST_NAME: "schema-registry"
-      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
-    depends_on:
-      kafka:
-        condition: service_healthy
 
   mongodb:
     image: mongo:6.0.6
