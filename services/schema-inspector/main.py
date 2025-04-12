@@ -1,5 +1,6 @@
 import sys
 import os
+from tracing import setup_tracer
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "libs")))
 
 from fastapi import FastAPI, Query, Request
@@ -30,6 +31,9 @@ if libs_path not in sys.path:
 # ----------------------
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+
+# Attach tracing to this service
+setup_tracer(app)
 
 @app.get("/health")
 def health_check():

@@ -54,6 +54,7 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   grafana:
@@ -72,3 +73,17 @@ services:
       kafka:
         condition: service_healthy
     restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"   # UI
+      - "6831:6831/udp" # UDP for traces
+      - "14268:14268"   # HTTP receiver (OpenTelemetry)
+
+  blackbox:
+    image: prom/blackbox-exporter
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./prometheus/blackbox.yml:/etc/blackbox_exporter/config.yml

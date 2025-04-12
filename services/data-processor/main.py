@@ -10,6 +10,7 @@ import threading
 import requests
 from kafka import KafkaConsumer, KafkaProducer
 from fastapi import FastAPI
+from tracing import setup_tracer
 import pymongo
 import jsonschema
 from libs.kafka_utils import create_topic_if_missing
@@ -32,6 +33,9 @@ if libs_path not in sys.path:
 # FastAPI App with Health Check
 # ----------------------
 app = FastAPI()
+
+# Attach tracing to this service
+setup_tracer(app)
 
 @app.get("/health")
 def health_check():

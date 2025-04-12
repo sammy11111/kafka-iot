@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 from datetime import datetime, timezone
+from tracing import setup_tracer
 
 # Load environment variables from root .env
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
@@ -18,6 +19,9 @@ if libs_path not in sys.path:
 
 # initialize FastAPI
 app = FastAPI()
+
+# Attach tracing to this service
+setup_tracer(app)
 
 # Setup MongoDB connection
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
