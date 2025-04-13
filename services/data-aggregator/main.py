@@ -39,35 +39,54 @@ def health_check():
 #    'aggregated_data' collection.
 # ---------------------------------------------------------------------------------
 def aggregate_data():
-
     raw_data = list(db["sensor_data"].find())
     if not raw_data:
         return {"message": "No data to aggregate"}
 
-    # Build a list of flat records from the raw senseBox data.
+    # Build a list of flat records from the raw sensor data
     records = []
     for doc in raw_data:
-        # Parse timestamp from the "createdAt" field
+        # Parse timestamp from the "timestamp" field (new schema) or fallback to "createdAt" (old schema)
         try:
-            timestamp = pd.to_datetime(doc.get("createdAt"))
+            timestamp = pd.to_datetime(doc.get("timestamp") or doc.get("createdAt"))
         except Exception as e:
             continue  # Skip record if timestamp conversion fails
 
-        # Convert sensor value (string) to float. Skip document if conversion fails.
+        # Get location data - might be nested or flat depending on schema version
+        location = doc.get("location", {})
+        if isinstance(location, dict):
+            lat = location.get("lat")
+            lon = location.get("lon")
+        else:
+            # Fallback for old schema
+            lat = doc.get("lat")
+            lon = doc.get("lon")
+
+        # Try getting sensor ID from either schema format
+        sensor_id = doc.get("sensor_id") or doc.get("sensorId")
+
+        # Handle value conversion properly for both schema versions
         try:
             value = float(doc.get("value", 0))
         except (TypeError, ValueError):
             continue
 
+        # Box ID could be in either format
+        box_id = doc.get("box_id") or doc.get("boxId")
+        box_name = doc.get("box_name") or doc.get("boxName")
+
+        # Get sensor type - could be in either format
+        sensor_type = doc.get("sensor_type") or doc.get("sensorType")
+
         record = {
             "timestamp": timestamp,
-            "boxId": doc.get("boxId"),
-            "boxName": doc.get("boxName"),
+            "boxId": box_id,
+            "boxName": box_name,
             "exposure": doc.get("exposure"),
-            "lat": doc.get("lat"),
-            "lon": doc.get("lon"),
-            "sensorId": doc.get("sensorId"),
-            "sensorType": doc.get("sensorType"),
+            "lat": lat,
+            "lon": lon,
+            "sensorId": sensor_id,
+            "sensorType": sensor_type,
             "phenomenon": doc.get("phenomenon"),
             "value": value,
             "unit": doc.get("unit"),
@@ -86,22 +105,22 @@ def aggregate_data():
     df.set_index("timestamp", inplace=True)
 
     # Perform aggregation: compute mean value per minute for each sensor type
-    # Group by sensorType and resample per minute.
+    # Group by sensorType and resample per minute
     agg_df = (
         df.groupby("sensorType")
-          .resample("1T")["value"]
-          .mean()
-          .reset_index() # rest the index back, timestamp is no longer index
+        .resample("1T")["value"]
+        .mean()
+        .reset_index()  # reset the index back, timestamp is no longer index
     )
 
     # Convert aggregated DataFrame back to dictionary records
     aggregated_records = agg_df.to_dict("records")
-    
+
     # Clean up previous aggregated data and insert new aggregation
     db["aggregated_data"].drop()
     if aggregated_records:
         db["aggregated_data"].insert_many(aggregated_records)
-    
+
     return {"message": "Aggregation complete", "aggregated_count": len(aggregated_records)}
 
 # ---------------------------------------------------------------------------------
