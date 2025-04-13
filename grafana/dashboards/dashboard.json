@@ -1,10 +1,244 @@
-
 {
   "annotations": {
     "list": []
   },
-  "panels": [],
-  "schemaVersion": 26,
-  "title": "Kafka IoT Metrics",
-  "version": 1
-}
+  "schemaVersion": 36,
+  "title": "Kafka IoT Sensor Data Dashboard",
+  "version": 1,
+  "id": null,
+  "uid": "mongodb-iot-sensors-dashboard",
+  "tags": ["iot", "mongodb", "sensor", "temperature", "humidity"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "panels": [
+      {
+        "type": "graph",
+        "title": "Temperature",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 12,
+          "h": 6
+        },
+        "datasource": "MongoDB",
+        "targets": [
+          {
+            "collection": "sensor_data",
+            "aggregate": [
+              {
+                "$match": {
+                  "sensor_id": "sensor_1"
+                }
+              },
+              {
+                "$group": {
+                  "_id": "$timestamp",
+                  "average_temperature": { "$avg": "$temperature" }
+                }
+              },
+              {
+                "$sort": { "_id": 1 }
+              }
+            ]
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius",
+            "decimals": 2
+          }
+        },
+        "timeFrom": null,
+        "timeShift": null
+      },
+      {
+        "type": "graph",
+        "title": "Humidity",
+        "gridPos": {
+          "x": 0,
+          "y": 6,
+          "w": 12,
+          "h": 6
+        },
+        "datasource": "MongoDB",
+        "targets": [
+          {
+            "collection": "sensor_data",
+            "aggregate": [
+              {
+                "$match": {
+                  "sensor_id": "sensor_1"
+                }
+              },
+              {
+                "$group": {
+                  "_id": "$timestamp",
+                  "average_humidity": { "$avg": "$humidity" }
+                }
+              },
+              {
+                "$sort": { "_id": 1 }
+              }
+            ]
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 2
+          }
+        },
+        "timeFrom": null,
+        "timeShift": null
+      },
+      {
+        "type": "gauge",
+        "title": "Sensor Status",
+        "gridPos": {
+          "x": 0,
+          "y": 12,
+          "w": 6,
+          "h": 3
+        },
+        "datasource": "MongoDB",
+        "targets": [
+          {
+            "collection": "sensor_data",
+            "aggregate": [
+              {
+                "$match": {
+                  "sensor_id": "sensor_1",
+                  "status": "online"
+                }
+              },
+              {
+                "$group": {
+                  "_id": null,
+                  "count": { "$sum": 1 }
+                }
+              }
+            ]
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "min": 0,
+            "max": 1
+          }
+        },
+        "gauge": {
+          "thresholds": [
+            {
+              "value": 0,
+              "color": "red"
+            },
+            {
+              "value": 1,
+              "color": "green"
+            }
+          ]
+        }
+      },
+      {
+        "type": "stat",
+        "title": "MongoDB Connectivity Test",
+        "gridPos": {
+          "x": 6,
+          "y": 12,
+          "w": 6,
+          "h": 3
+        },
+        "datasource": "MongoDB",
+        "targets": [
+          {
+            "collection": "sensor_data",
+            "aggregate": [
+              {
+                "$limit": 1
+              }
+            ]
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "stat": {
+          "thresholds": [
+            {
+              "value": 0,
+              "color": "red"
+            },
+            {
+              "value": 1,
+              "color": "green"
+            }
+          ]
+        },
+        "description": "This panel checks if MongoDB is reachable by querying the sensor_data collection. If data is returned, it indicates that MongoDB is online."
+      },      
+      {
+        "type": "table",
+        "title": "Sensor Data Overview",
+        "gridPos": {
+          "x": 0,
+          "y": 12,
+          "w": 12,
+          "h": 9
+        },
+        "datasource": "MongoDB",
+        "targets": [
+          {
+            "collection": "sensor_data",
+            "aggregate": [
+              {
+                "$match": {
+                  "sensor_id": "sensor_1"
+                }
+              },
+              {
+                "$project": {
+                  "_id": 0,
+                  "timestamp": 1,
+                  "sensor_id": 1,
+                  "temperature": 1,
+                  "humidity": 1
+                }
+              },
+              {
+                "$sort": { "timestamp": -1 }
+              }
+            ]
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "type": "string"
+          },
+          "overrides": []
+        },
+        "columns": [
+          {
+            "text": "Timestamp",
+            "value": "timestamp"
+          },
+          {
+            "text": "Sensor ID",
+            "value": "sensor_id"
+          },
+          {
+            "text": "Temperature",
+            "value": "temperature"
+          },
+          {
+            "text": "Humidity",
+            "value": "humidity"
+          }
+        ]
+      }
+    ],
+    "folderId": 0,
+    "overwrite": false
+  }
