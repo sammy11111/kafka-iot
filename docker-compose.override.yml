@@ -65,21 +65,3 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-
-  schema-inspector:
-    build:
-      context: .
-      dockerfile: services/schema-inspector/Dockerfile.dev
-    container_name: schema-inspector
-    ports:
-      - "${SCHEMA_INSPECTOR_PORT}:${SCHEMA_INSPECTOR_PORT}"
-    volumes:
-      - ./services/schema-inspector:/app
-      - ./libs:/app/libs:ro
-      - ./services/schema-inspector/templates:/app/templates:ro
-    depends_on:
-      kafka:
-        condition: service_healthy
-    env_file:
-      - .env
-    restart: unless-stopped

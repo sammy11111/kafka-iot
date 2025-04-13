@@ -51,6 +51,10 @@ shell:
 status:
 	docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
+build-data-processor: ## Build the data-processor service container
+	@echo "🐍 Building data-processor service..."
+	docker compose build data-processor
+
 build-base: ## Build the shared base Python image used by services
 	@echo "🛠️  Building base image with fresh requirements..."
 	docker build -f base-images/Dockerfile.dev -t base-python-dev .
