@@ -17,8 +17,5 @@ RUN python -c "import libs.kafka_utils"
 # Set environment variable so Python knows where to find shared code
 ENV PYTHONPATH="/app/libs"
 
-# Expose FastAPI service port
-ENV DATA_INGESTOR_PORT=8001
-
 # Run FastAPI with auto-reload
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
