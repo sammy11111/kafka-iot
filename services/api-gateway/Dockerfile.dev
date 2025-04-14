@@ -6,5 +6,8 @@ COPY services/api-gateway /app
 COPY libs /app/libs
 RUN python -c "import libs.kafka_utils"
 
+# Set default port if not provided at runtime
+ENV API_GATEWAY_PORT=8000
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${API_GATEWAY_PORT:-8000} --reload"]
+
 

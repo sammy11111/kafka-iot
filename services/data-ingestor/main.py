@@ -13,6 +13,7 @@ from kafka.errors import NoBrokersAvailable
 from kafka.admin import NewTopic
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from tracing import setup_tracer
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
@@ -165,6 +166,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI()
 app.router.lifespan_context = lifespan
 
+# Attach tracing to this service
+setup_tracer(app)
 
 @app.get("/health")
 def health_check():

@@ -8,3 +8,12 @@ python-dotenv==1.0.1
 jinja2==3.0.0
 pandas>=2.0.0,<2.1.0
 psutil==5.9.8
+
+# OpenTelemetry dependencies
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-exporter-jaeger==1.21.0
+opentelemetry-propagator-b3==1.21.0
+opentelemetry-instrumentation==0.42b0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-instrumentation-requests==0.42b0

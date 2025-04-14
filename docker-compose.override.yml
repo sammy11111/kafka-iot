@@ -1,5 +1,8 @@
 services:
   api-gateway:
+    environment:
+      - OTEL_SERVICE_NAME=api-gateway
+      - PYTHONPATH=/app/libs
     build:
       context: .
       dockerfile: services/api-gateway/Dockerfile.dev
@@ -14,6 +17,9 @@ services:
     restart: unless-stopped
 
   data-aggregator:
+    environment:
+      - OTEL_SERVICE_NAME=data-aggregator
+      - PYTHONPATH=/app/libs
     build:
       context: .
       dockerfile: services/data-aggregator/Dockerfile.dev
@@ -40,6 +46,7 @@ services:
       - ./logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
+      - OTEL_SERVICE_NAME=data-ingestor
       - DATA_INGESTOR_PORT=${DATA_INGESTOR_PORT}
       - PYTHONPATH=/app/libs
     depends_on:
@@ -50,6 +57,9 @@ services:
     restart: unless-stopped
 
   data-processor:
+    environment:
+      - OTEL_SERVICE_NAME=data-processor
+      - PYTHONPATH=/app/libs
     build:
       context: .
       dockerfile: services/data-processor/Dockerfile.dev
@@ -65,3 +75,23 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+
+  schema-inspector:
+    environment:
+      - OTEL_SERVICE_NAME=schema-inspector
+      - PYTHONPATH=/app/libs
+    build:
+      context: .
+      dockerfile: services/schema-inspector/Dockerfile.dev
+    container_name: schema-inspector
+    ports:
+      - "${SCHEMA_INSPECTOR_PORT}:${SCHEMA_INSPECTOR_PORT}"
+    volumes:
+      - ./services/schema-inspector:/app
+      - ./libs:/app/libs:ro
+      - ./services/schema-inspector/templates:/app/templates:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file:
+      - .env

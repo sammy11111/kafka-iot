@@ -7,6 +7,7 @@ import pymongo
 import jsonschema
 from kafka import KafkaConsumer, KafkaProducer
 from fastapi import FastAPI
+from tracing import setup_tracer
 from dotenv import load_dotenv
 from libs.kafka_utils import create_topic_if_missing
 from libs.env_loader import PROJECT_ROOT # do not remove
@@ -26,6 +27,8 @@ logger = logging.getLogger("data-processor")
 # ----------------------------------------
 app = FastAPI()
 
+# Attach tracing to this service
+setup_tracer(app)
 
 @app.get("/health")
 def health_check():
