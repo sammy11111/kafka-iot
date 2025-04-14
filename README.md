@@ -21,7 +21,6 @@ Once the `.env` file is created, populate the environmental variables with appro
 
 | Service           | Port Env Var            | Description                                     |
 |------------------|--------------------------|-------------------------------------------------|
-| api-gateway       | `API_GATEWAY_PORT`       | Entry point for routing & orchestration         |
 | data-ingestor     | `DATA_INGESTOR_PORT`     | Polls OpenSenseMap, sends raw data to Kafka     |
 | data-processor    | `DATA_PROCESSOR_PORT`    | Consumes from Kafka, validates & stores to DB   |
 | data-aggregator   | `DATA_AGGREGATOR_PORT`   | Future: aggregate for visualization             |
