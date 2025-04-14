@@ -1,21 +1,4 @@
-import os
-import sys
-from dotenv import load_dotenv
-
-# ----------------------------------------
-# Load environment variables from root .env
-# ----------------------------------------
-dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path=dotenv_path)
-
-# ----------------------------------------
-# Add shared libraries to sys.path
-# ----------------------------------------
-libs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../libs"))
-if libs_path not in sys.path:
-    sys.path.append(libs_path)
-
+from libs.env_loader import PROJECT_ROOT # do not remove
 from fastapi import FastAPI
 from tracing import setup_tracer
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
