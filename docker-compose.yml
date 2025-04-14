@@ -29,7 +29,7 @@ services:
     healthcheck:
       test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 10
 
   mongodb:
@@ -78,7 +78,7 @@ services:
   grafana:
     image: grafana/grafana:10.2.3
     ports:
-      - "${GRAFANA_PORT:-3000}:3000"
+      - "${GRAFANA_PORT:-3001}:3001"
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.1
