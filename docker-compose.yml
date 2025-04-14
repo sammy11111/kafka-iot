@@ -46,7 +46,7 @@ services:
       - ./alert.rules.yml:/etc/prometheus/alert.rules.yml
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
     container_name: ${PROJECT_NAME:-bigdataproject}-cadvisor-1
     privileged: true
     devices:
@@ -56,9 +56,8 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro=
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /var/lib/docker:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     ports:
       - "8081:8081"
@@ -68,10 +67,13 @@ services:
     depends_on:
       - kafka
     healthcheck:
-      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:8080/healthz" ]
+      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:8081/healthz" ]
       interval: 10s
       timeout: 5s
       retries: 3
+    profiles:
+      - "!test"
+
 
   grafana:
     image: grafana/grafana:10.2.3
