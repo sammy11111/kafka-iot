@@ -101,7 +101,9 @@ make build-base      # Builds shared Python base image
 ## Monitoring Dashboards
 
 - Grafana: [http://localhost:$GRAFANA_PORT](http://localhost:$GRAFANA_PORT) (admin/admin)
+  The configuraton file can be found at /grafana/dashboards/dashboard.json
 - Prometheus: [http://localhost:$PROMETHEUS_PORT](http://localhost:$PROMETHEUS_PORT)
+  The configuration file can be found at /grafana/dashboards/system_metrics.json
 - Kafka UI: [http://localhost:$KAFKA_UI_PORT](http://localhost:$KAFKA_UI_PORT)
 
 ---
