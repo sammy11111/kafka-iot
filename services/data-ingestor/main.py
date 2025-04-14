@@ -17,6 +17,8 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
 
+from libs.env_loader import PROJECT_ROOT # do not remove
+
 # ----------------------------------------
 # Honor PYTHONPATH manually at runtime
 # ----------------------------------------
@@ -26,13 +28,6 @@ if pythonpath and pythonpath not in sys.path:
     print(f"🔧 Added PYTHONPATH to sys.path: {pythonpath}")
 print(f"💡 PYTHONPATH: {os.environ.get('PYTHONPATH')}")
 print(f"📁 sys.path = {sys.path}")
-
-# ----------------------------------------
-# Load environment variables from root .env
-# ----------------------------------------
-dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path=dotenv_path)
 
 # ----------------------------------------
 # Import diagnostics module or fallback

@@ -9,13 +9,7 @@ from kafka import KafkaConsumer, KafkaProducer
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from libs.kafka_utils import create_topic_if_missing
-
-# ----------------------------------------
-# Load environment variables
-# ----------------------------------------
-dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path=dotenv_path)
+from libs.env_loader import PROJECT_ROOT # do not remove
 
 # ----------------------------------------
 # Logging

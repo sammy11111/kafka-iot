@@ -6,24 +6,11 @@ from fastapi import FastAPI, Query, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from kafka import KafkaConsumer
+from libs.env_loader import PROJECT_ROOT # do not remove
 import os
 import json
 import csv
 import io
-
-# ----------------------------------------
-# Load environment variables from root .env
-# ----------------------------------------
-dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path=dotenv_path)
-
-# ----------------------------------------
-# Add shared libraries to sys.path
-# ----------------------------------------
-libs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../libs"))
-if libs_path not in sys.path:
-    sys.path.append(libs_path)
 
 # ----------------------
 # FastAPI App with Health Check

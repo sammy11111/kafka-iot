@@ -5,16 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 from datetime import datetime, timezone
-
-# Load environment variables from root .env
-dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path=dotenv_path)
-
-# Include shared libs in the path
-libs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../libs"))
-if libs_path not in sys.path:
-    sys.path.append(libs_path)
+from libs.env_loader import PROJECT_ROOT # do not remove
 
 # initialize FastAPI
 app = FastAPI()

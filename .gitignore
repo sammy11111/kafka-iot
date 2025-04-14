@@ -44,7 +44,6 @@ Thumbs.db
 .dockerignore
 
 # Environment config
-.env
 .env.*
 .envrc
 !.env.template
