@@ -6,7 +6,8 @@ jsonschema==4.21.1
 pymongo==4.6.1
 python-dotenv==1.0.1
 jinja2==3.0.0
-pandas>=2.0.0,<2.1.0
+numpy==1.23.5
+pandas==1.5.3
 psutil==5.9.8
 
 # OpenTelemetry dependencies
