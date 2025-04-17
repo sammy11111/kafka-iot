@@ -1,21 +1,31 @@
 import os
-import shutil
 import subprocess
+from shutil import copyfile
 
 
-def copy_env():
-    if not os.path.exists(".env") and os.path.exists(".env.template"):
-        shutil.copy(".env.template", ".env")
-        print("✅ .env file created from template.")
+ENV_TEMPLATE = ".env.template"
+ENV_FILE = ".env"
+
+
+def copy_env_file():
+    if not os.path.exists(ENV_FILE):
+        print(f"Creating {ENV_FILE} from template...")
+        copyfile(ENV_TEMPLATE, ENV_FILE)
     else:
-        print("ℹ️ .env already exists or no template found.")
+        print(f"{ENV_FILE} already exists. Skipping copy.")
 
 
-def run_make_up():
-    print("🚀 Starting services with `make up`...")
-    subprocess.run(["make", "up"])
+def run_make_dev_up():
+    print("Starting development environment with Makefile...")
+    subprocess.run(["make", "dev-up"])
+
+
+def main():
+    print("\n========== Kafka IoT Dev Environment Setup ==========")
+    copy_env_file()
+    run_make_dev_up()
+    print("\n✅ Setup complete. Modify .env if needed before continuing development.")
 
 
 if __name__ == "__main__":
-    copy_env()
-    run_make_up()
+    main()
